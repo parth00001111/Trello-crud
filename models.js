@@ -1,21 +1,22 @@
 const mongoose = require("mongoose");
+mongoose.connect("mongodb+srv://kanhamahajan73:kanha123@cluster0.lmz1a4r.mongodb.net/trello");
 
-//Schema and models
+/// schemas and models
 
-const userSchema = new mongoose.Schema({
-    username:String,
-    password:String
+const userSchema = mongoose.Schema({
+    username: String,
+    password: String
 })
 
-const organizationSchema = new mongoose.Schema({
-    title:String,
-    description:String,
-    admin:mongoose.Types.ObjectId,//ObjectId(69c........)//yaha user ka id store hoga
-    members:[mongoose.Types.ObjectId]//members of the particular organization
-
+const organizationSchema = mongoose.Schema({
+    title: String,
+    description: String,
+    admin: mongoose.Types.ObjectId,
+    members: [mongoose.Types.ObjectId]
 })
 
-const organizationModel=mongoose.model("organizations",organizationSchema);
+
+const organizationModel = mongoose.model("organizations", organizationSchema);
 const userModel = mongoose.model("users", userSchema);
 
 module.exports = {
