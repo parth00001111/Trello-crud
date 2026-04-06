@@ -1,4 +1,4 @@
-
+const mongoose = require("mongoose");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { authMiddleware } = require("./middleware")
@@ -21,7 +21,7 @@ app.post("/signup", async (req, res) => {
     const password = req.body.password;
 
     const userExists = await userModel.findOne({
-        username: username,
+        username: username,     
     });
 
     if (userExists) {
@@ -75,7 +75,8 @@ app.post("/organization", authMiddleware, async (req, res) => {
         title: req.body.title,
         description: req.body.description,
         admin: userId,
-        members: []
+        members: [],
+        boards:[]
     })
 
     res.json({
@@ -120,8 +121,38 @@ app.post("/add-member-to-organization", authMiddleware, async (req, res) => {
     })
 })
 
-app.post("/board", (req, res) => {
-    
+app.post("/board", authMiddleware, async(req, res) => {
+    const userId = req.userId;
+    const title = req.body.title;
+    const organizationId = req.body.organizationId;
+    if(!title) {
+        res.status(400).json({
+            message: "Title is missing!!!"
+        })
+        return;
+    }
+    if(!organizationId) {
+        res.status(400).json({
+            message: "Organization id is invalid or missing"
+        })
+    }
+    const organization = await organizationModel.findOne({
+        _id : organizationId
+    });
+    if(!organization){
+        res.status(411).json({
+            message: "This organization does not exist"
+        })
+        return;
+    }
+    organization.boards.push({
+        title:title,
+        userId:userId
+    });
+    await organization.save();
+    res.json({
+        message: "new board is created"
+    })
 })
 
 app.post("/issue", (req, res) => {
@@ -161,7 +192,7 @@ app.get("/organization", authMiddleware, async (req, res) => {
 })
 
 app.get("/boards", (req, res) => {
-
+    
     
 })
 
@@ -207,11 +238,9 @@ app.delete("/members", authMiddleware, async (req, res) => {
         return
     }
 
-    console.log("before members");
-    console.log(organization.members)
+    
     organization.members = organization.members.filter(x => x.toString() !== memberUser._id.toString());
-    console.log("after members");
-    console.log(organization.members)
+  
     await organization.save();
 
     res.json({

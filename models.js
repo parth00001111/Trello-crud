@@ -12,7 +12,11 @@ const organizationSchema = mongoose.Schema({
     title: String,
     description: String,
     admin: mongoose.Types.ObjectId,
-    members: [mongoose.Types.ObjectId]
+    members: [mongoose.Types.ObjectId],
+    boards:[{
+        title:String,
+        userId:mongoose.Types.ObjectId
+    }]
 })
 
 
