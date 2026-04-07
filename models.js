@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-
 /// schemas and models
 
 const userSchema = mongoose.Schema({

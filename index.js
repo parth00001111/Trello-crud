@@ -266,10 +266,10 @@ app.get("/boards", authMiddleware, async (req, res) => {
 
 
 //FETCH ISSUES
-app.get("/issues", async (req, res) => {
+app.get("/issues", authMiddleware, async (req, res) => {
     const { issueId } = req.query;
     if (!issueId) { 
-        rew.status(400).json({
+        res.status(400).json({
             message: "This issue does not exist"
         })
         return;
@@ -280,13 +280,62 @@ app.get("/issues", async (req, res) => {
     })
 })
 
-app.get("/members", middleware, async (req, res) => {
+app.get("/members", authMiddleware, async (req, res) => {
+    const { organizationId } = req.query;
+    if(!organizationId) {
+        res.status(400).json({
+            message: "Organization id is required"
+        })
+        return;
+    }
+    const organization = await organizationModel.findById(organizationId).populate('members','username');
+    res.json({
+        members:organization.members
+    })
 
 })
 
 // UPDATE
-app.put("/issues", (req, res) => {
-    
+app.put("/issues", authMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const { issueId } = req.query;
+    const {title, description, boardId, assignedTo} = req.body;
+
+    if(!title || typeof title !== "string") {
+        res.json({
+            message: "Title is required"
+        })
+        return;
+    }
+    if (!description || typeof description !== "string"){
+        res.json({
+            message: "Description is required"
+        })
+        return;
+    }
+    if (!boardId) {
+        res.json({
+            message: "Incorrect Board Id"
+        })
+        return;
+    }
+    if(!assigned) {
+        res.json({
+            message: "User is not the memebr"
+        })
+        return;
+    }
+    const issue = await issueModel.findByIdAndUpdate(issueId,{
+        title,
+        description,
+        boardId,
+        userId,
+        assignedTo
+    })
+    res.json({
+        issue
+    })
+
 })
 
 //DELETE -- FIND THE GBUG and fix it
