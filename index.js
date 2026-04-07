@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const { authMiddleware } = require("./middleware")
-const {userModel, organizationModel} = require("./models");
+const {userModel, organizationModel, boardsModel, issueModel} = require("./models");
 
 let BOARD_ID = 1;
 let ISSUES_ID = 1;
@@ -145,18 +145,72 @@ app.post("/board", authMiddleware, async(req, res) => {
         })
         return;
     }
-    organization.boards.push({
-        title:title,
-        userId:userId
-    });
-    await organization.save();
+    const board = await boardsModel.create({
+        title,
+        organizationId,
+        createdBy:userId
+    })
     res.json({
-        message: "new board is created"
+        message: "Board is Created",
+        BoardId: board._id
     })
 })
 
-app.post("/issue", (req, res) => {
-    
+app.post("/issue", authMiddleware, async (req, res) => {
+    const userId = req.userId;
+    const title =  req.body.title;
+    const description = req.body.description;
+    const boardId = req.body.boardId;
+    const assignedMemberId = req.body.assignedMemberId;
+
+    if(!assignedMemberId) {
+        res.status(400).json({
+            message: "This user does not exist"
+        })
+        return;
+    }
+    if(!title ||  typeof title !== "string"){
+        res.status(400).json({
+            message : "Required title is not found"
+        })
+        return;
+    }    
+    if(!description || typeof description !== "string") {
+        res.status(400).json({
+            message: "Required description is not found"
+        })
+        return;
+    }
+    if(!boardId) {
+        res.status(400).json({
+            message: "Board id is Required"
+        })
+        return;
+
+    }
+    const board = await boardsModel.findById(boardId);
+    if(!board) {
+        res.status(400).json({
+            message: "This board does not exist"
+        })
+        return;
+    }
+   
+  const assigned = await userModel.findById(assignedMemberId);
+
+    const issues = await issueModel.create({
+        title:title,
+        description:description,
+        boardId:boardId,
+        createBy:userId,
+        assignedTo:assigned
+    })
+
+    res.json({
+        message: "Issue is created"
+        
+    })
+
 })
 
 //GET endpoints
@@ -191,22 +245,43 @@ app.get("/organization", authMiddleware, async (req, res) => {
     })
 })
 
-app.get("/boards", (req, res) => {
-    
-    
+app.get("/boards", authMiddleware, async (req, res) => {
+    const { organizationId } = req.query;
+    if (!organizationId) {
+        res.status(400).json({
+            message: "This organization does not exist"
+        })
+        return;
+    }
+    const Boards = await boardsModel.find({
+        organizationId
+    }).populate('createdBy','username')
+    res.json({
+        Boards
+    })
 })
 
-app.get("/issues", (req, res) => {
-    
+app.get("/issues", async (req, res) => {
+    const { issueId } = req.query;
+    if (!issueId) { 
+        rew.status(400).json({
+            message: "This issue does not exist"
+        })
+        return;
+    }
+    const issue = await issueModel.findById(issueId).populate('assignedTo', 'username')
+    res.json({
+        issue
+    })
 })
 
-app.get("/members", (req, res) => {
+app.get("/members", middleware, async (req, res) => {
 
 })
 
 // UPDATE
 app.put("/issues", (req, res) => {
-
+    
 })
 
 //DELETE -- FIND THE GBUG and fix it
