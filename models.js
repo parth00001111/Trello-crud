@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-mongoose.connect("mongodb+srv://kanhamahajan73:kanha123@cluster0.lmz1a4r.mongodb.net/trello");
 
 /// schemas and models
 
